@@ -14,16 +14,42 @@ pub struct CPU {
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub enum AddressingMode {
-    Immediate,
-    ZeroPage,
-    ZeroPage_X,
-    ZeroPage_Y,
-    Absolute,
-    Absolute_X,
-    Absolute_Y,
-    Indirect_X,
-    Indirect_Y,
-    NoneAddressing,
+    /*O dado não é um endereço de memória, mas sim o próprio valor numérico constante que a instrução vai usar imediatamente.
+    No código, é identificado pelo símbolo # */
+    Immediate, //ex: LDA #$05
+    
+    /*A "Página Zero" corresponde aos primeiros 256 bytes da memória RAM (endereços de $0000 a $00FF). 
+    Como esses endereços precisam de apenas 1 byte para serem representados (em vez de 2 bytes), as instruções que os utilizam são mais rápidas e ocupam menos espaço. */
+    
+    /*A instrução acessa diretamente um endereço localizado estritamente na Página Zero.*/
+    ZeroPage, // ex: LDA $10 (Carrega o valor que estiver guardado na memória RAM no endereço $0010) 
+    /*O endereço final é calculado somando o endereço base da Página Zero fornecido com o valor atual do registrador X. 
+    Se a soma passar de $FF, ela dá a volta (wrap around) e continua no início da Página Zero.*/
+    ZeroPage_X, // ex: Se X vale 02, a instrução LDA $10, X vai ler o endereço $0012.
+    /*Funciona exatamente igual ao ZeroPage_X, mas utiliza o registrador Y. É usado por pouquíssimas instruções (como LDX e STX).*/
+    ZeroPage_Y, // ex: Se Y vale 05, a instrução LDX $10, Y vai ler o endereço $0015.
+
+    /*Os modos "Absolute" permitem acessar qualquer lugar de toda a memória do sistema (de $0000 até $FFFF), pois utilizam endereços completos de 2 bytes (16 bits). */
+    
+    /*A instrução aponta diretamente para um endereço fixo e completo na memória.*/
+    Absolute, // ex: LDA $2000 (Carrega o valor armazenado na memória no endereço $2000).
+    /*O endereço final é calculado somando o endereço absoluto de 16 bits fornecido com o valor atual do registrador X.*/
+    Absolute_X, // ex: Se X vale 05, a instrução LDA $2000,X vai ler o endereço $2005.
+    /*Funciona exatamente igual ao Absolute_X, mas soma o valor do registrador Y ao endereço absoluto fornecido.*/
+    Absolute_Y, // ex: Se Y vale 0A, a instrução LDA $2000,Y vai ler o endereço $200A.
+
+    /*O conceito de "indireto" significa usar a memória para guardar um ponteiro (um endereço que aponta para outro endereço). 
+    No 6502, esses modos usam a Página Zero para buscar o endereço de 16 bits final. */
+
+    /*O processador pega o endereço da Página Zero fornecido, soma o valor de X a ele e, LDA ($10),Y. O processador vai no endereço $0010 da Página Zero e lê o endereço de 16 bits salvo ali (ex: $4000). Depois, ele pega esse $4000 e soma o valor de Y (se Y for 05, o destino final será $4005). É ideal para navegar por matrizes e arrays de dados na memória.
+    no endereço resultante, encontra os 2 bytes que formam o endereço final onde o dado realmente está. */
+    Indirect_X, // ex :LDA ($10,X). Se X é 02, o processador vai até a Página Zero no endereço $0012 e lê o endereço de 16 bits que está guardado ali. Digamos que ali dentro esteja escrito $3000. O processador então vai até a memória $3000 buscar o dado.
+    /*É o modo indireto mais comum e útil do 6502. O processador vai até o endereço da Página Zero fornecido para ler um endereço de 16 bits armazenado lá. 
+    Depois que ele pega esse endereço, ele soma o valor do registrador Y a ele para chegar ao destino final.*/
+    Indirect_Y, // ex: LDA ($10),Y. O processador vai no endereço $0010 da Página Zero e lê o endereço de 16 bits salvo ali (ex: $4000). Depois, ele pega esse $4000 e soma o valor de Y (se Y for 05, o destino final será $4005). É ideal para navegar por matrizes e arrays de dados na memória.
+
+    /*A instrução não precisa de um endereço de memória explícito.*/
+    NoneAddressing, //ex: INX
 }
 
 trait Mem {
