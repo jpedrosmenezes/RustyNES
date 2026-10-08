@@ -1,4 +1,4 @@
-use crate::cpu::AdressingMode;
+use crate::cpu::AddressingMode;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
@@ -7,11 +7,11 @@ pub struct OpCode {
     pub mnemonic: &'static str,
     pub len: u8,
     pub cycles: u8,
-    pub mode: AdressingMode,
+    pub mode: AddressingMode,
 }
 
 impl OpCode {
-    fn new(code: u8, mnemonic: &'static str, len: u8, cycles: u8, mode: AddressingMode) - Self {
+    fn new(code: u8, mnemonic: &'static str, len: u8, cycles: u8, mode: AddressingMode) -> Self {
         OpCode {
             code: code,
             mnemonic: mnemonic,
@@ -22,7 +22,7 @@ impl OpCode {
     }   
 }
 
-pub static CPU_OPS_CODES: LazyLock<Vecu<OpCode>> = LazyLock::new(|| {
+pub static CPU_OPS_CODES: LazyLock<Vec<OpCode>> = LazyLock::new(|| {
     vec![
         OpCode::new(0x00, "BRK", 1, 7, AddressingMode::NoneAddressing),
         OpCode::new(0xea, "NOP", 1, 2, AddressingMode::NoneAddressing),
@@ -31,12 +31,12 @@ pub static CPU_OPS_CODES: LazyLock<Vecu<OpCode>> = LazyLock::new(|| {
 
         //AND
         OpCode::new(0x29, "AND", 2, 2, AddressingMode::Immediate),
-        OpCode::new(0x25, "AND", 2, 3, AdressingMode::ZeroPage),
+        OpCode::new(0x25, "AND", 2, 3, AddressingMode::ZeroPage),
         OpCode::new(0x35, "AND", 2, 4, AddressingMode::ZeroPage_X),
         OpCode::new(0x2d, "AND", 3, 4, AddressingMode::Absolute),
-        OpCode::new(0x3d, "AND", 3, 4, AdressingMode::Absolute_X),
+        OpCode::new(0x3d, "AND", 3, 4, AddressingMode::Absolute_X),
         OpCode::new(0x39, "AND", 3, 4, AddressingMode::Absolute_Y),
-        OpCode::new(0x21, "AND", 2, 6, AdressingMode::Indirect_X),
+        OpCode::new(0x21, "AND", 2, 6, AddressingMode::Indirect_X),
         OpCode::new(0x31, "AND", 2, 5, AddressingMode::Indirect_Y),
 
         //ORA
@@ -85,7 +85,7 @@ pub static CPU_OPS_CODES: LazyLock<Vecu<OpCode>> = LazyLock::new(|| {
         OpCode::new(0xc9, "CMP", 2, 2, AddressingMode::Immediate),
         OpCode::new(0xc5, "CMP", 2, 3, AddressingMode::ZeroPage),
         OpCode::new(0xd5, "CMP", 2, 4, AddressingMode::ZeroPage_X),
-        OpCode::new(0xcd, "CMP", 3, 4, AddressingMode:: Absolute),
+        OpCode::new(0xcd, "CMP", 3, 4, AddressingMode::Absolute),
         OpCode::new(0xdd, "CMP", 3, 4, AddressingMode::Absolute_X),
         OpCode::new(0xd9, "CMP", 3, 4, AddressingMode::Absolute_Y),
         OpCode::new(0xc1, "CMP", 2, 6, AddressingMode::Indirect_X),
@@ -125,7 +125,7 @@ pub static CPU_OPS_CODES: LazyLock<Vecu<OpCode>> = LazyLock::new(|| {
         OpCode::new(0xca, "DEX", 1, 2, AddressingMode::NoneAddressing),
 
         //Decrement Index Y by One
-        OpCode::new(0x88, "DEX", 1, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0x88, "DEY", 1, 2, AddressingMode::NoneAddressing),
 
         /*Shifts Instructions*/
         
@@ -160,11 +160,11 @@ pub static CPU_OPS_CODES: LazyLock<Vecu<OpCode>> = LazyLock::new(|| {
         /*Branching Instructions*/
 
         //Jump to New Location (JMP)
-        OpCode::new(0x4c, "JMP", 3, 3, AddressingMode::NoneAddressing),
-        OpCode::new(0x6c, "JMP", 3, 5, AddressingMode::NoneAddressing),
+        OpCode::new(0x4c, "JMP", 3, 3, AddressingMode::Absolute),
+        OpCode::new(0x6c, "JMP", 3, 5, AddressingMode::Indirect),
 
         //Jump to New Location Saving Return Address (JSR)
-        OpCode::new(0x20, "JSR", 3, 6, AddressingMode::NoneAddressing),
+        OpCode::new(0x20, "JSR", 3, 6, AddressingMode::Absolute),
 
         //Return from Interrupt (RTI)
         OpCode::new(0x40, "RTI", 1, 6, AddressingMode::NoneAddressing),
@@ -173,32 +173,32 @@ pub static CPU_OPS_CODES: LazyLock<Vecu<OpCode>> = LazyLock::new(|| {
         OpCode::new(0x60, "RTS", 1, 6, AddressingMode::NoneAddressing),
 
         //Branch on Carry Clear (BCC)
-        OpCode::new(0x90, "BCC", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0x90, "BCC", 2, 2, AddressingMode::Relative),
 
         //Branch on Carry Set (BCS)
-        OpCode::new(0xb0, "BCS", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0xb0, "BCS", 2, 2, AddressingMode::Relative),
 
         //Branch on Result Zero (BEQ)
-        OpCode::new(0xf0, "BEQ", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0xf0, "BEQ", 2, 2, AddressingMode::Relative),
 
         //Test Bits in Memory with Accumulator (BIT)
         OpCode::new(0x24, "BIT", 2, 3, AddressingMode::ZeroPage),
         OpCode::new(0x2c, "BIT", 3, 4, AddressingMode::Absolute),
 
         //Branch on Result Minus (BMI)
-        OpCode::new(0x30, "BMI", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0x30, "BMI", 2, 2, AddressingMode::Relative),
         
         //Branch on Result not Zero (BNE)
-        OpCode::new(0xd0, "BNE", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0xd0, "BNE", 2, 2, AddressingMode::Relative),
 
         //Branch on Result Plus (BPL)
-        OpCode::new(0x10, "BPL", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0x10, "BPL", 2, 2, AddressingMode::Relative),
 
         //Branch on Overflow Clear (BVC)
-        OpCode::new(0x50, "BVC", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0x50, "BVC", 2, 2, AddressingMode::Relative),
 
         //Branch on Overflow Set (BVS)
-        OpCode::new(0x70, "BVS", 2, 2, AddressingMode::NoneAddressing),
+        OpCode::new(0x70, "BVS", 2, 2, AddressingMode::Relative),
 
         /* Stores, Loads Instructions */
 
@@ -227,24 +227,24 @@ pub static CPU_OPS_CODES: LazyLock<Vecu<OpCode>> = LazyLock::new(|| {
         OpCode::new(0xbc, "LDY", 3, 4, AddressingMode::Absolute_X),
 
         //Store Accumulator in Memory (STA)
-        OpCode::new*(0x85, "STA", 2, 3, AddressingMode::ZeroPage),
-        OpCode::new*(0x95, "STA", 2, 4, AddressingMode::ZeroPage_X),
-        OpCode::new*(0x8D, "STA", 3, 4, AddressingMode::Absolute),
-        OpCode::new*(0x9D, "STA", 3, 5, AddressingMode::Absolute_X),
-        OpCode::new*(0x99, "STA", 3, 5, AddressingMode::Absolute_Y),
-        OpCode::new*(0x81, "STA", 2, 6, AddressingMode::Indirect_X),
-        OpCode::new*(0x91, "STA", 2, 6, AddressingMode::Indirect_Y),
+        OpCode::new(0x85, "STA", 2, 3, AddressingMode::ZeroPage),
+        OpCode::new(0x95, "STA", 2, 4, AddressingMode::ZeroPage_X),
+        OpCode::new(0x8D, "STA", 3, 4, AddressingMode::Absolute),
+        OpCode::new(0x9D, "STA", 3, 5, AddressingMode::Absolute_X),
+        OpCode::new(0x99, "STA", 3, 5, AddressingMode::Absolute_Y),
+        OpCode::new(0x81, "STA", 2, 6, AddressingMode::Indirect_X),
+        OpCode::new(0x91, "STA", 2, 6, AddressingMode::Indirect_Y),
 
 
         //Store Index X in Memory (STX)
-        OpCode::new*(0x86, "STX", 2, 3, AddressingMode::ZeroPage),
-        OpCode::new*(0x96, "STX", 2, 4, AddressingMode::ZeroPage_Y),
-        OpCode::new*(0x8E, "STX", 3, 4, AddressingMode::Absolute),
+        OpCode::new(0x86, "STX", 2, 3, AddressingMode::ZeroPage),
+        OpCode::new(0x96, "STX", 2, 4, AddressingMode::ZeroPage_Y),
+        OpCode::new(0x8E, "STX", 3, 4, AddressingMode::Absolute),
 
 
         //Store Index Y in Memory (STY)
-        OpCode::new*(0x84, "STY", 2, 3, AddressingMode::ZeroPage),
-        OpCode::new*(0x94, "STY", 2, 4, AddressingMode::ZeroPage_X),
-        OpCode::new*(0x8C, "STY", 3, 4, AddressingMode::Absolute),
+        OpCode::new(0x84, "STY", 2, 3, AddressingMode::ZeroPage),
+        OpCode::new(0x94, "STY", 2, 4, AddressingMode::ZeroPage_X),
+        OpCode::new(0x8C, "STY", 3, 4, AddressingMode::Absolute),
     ]
 });

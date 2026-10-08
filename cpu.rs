@@ -99,8 +99,6 @@ impl CPU {
             AddressingMode::Immediate => self.program_counter,
 
             AddressingMode::ZeroPage => self.mem_read(self.program_counter) as u16,
-
-            AddressingMode::Absolute => self.mem_read_u16(self.program_counter),
             
             AddressingMode::ZeroPage_X => {
                 let pos = self.mem_read(self.program_counter);
@@ -114,35 +112,50 @@ impl CPU {
                 addr
             }
 
-            AddressingMode::Absolute_X {
+            AddressingMode::Absolute => self.mem_read_u16(self.program_counter),
+
+            AddressingMode::Absolute_X => {
                 let base = self.mem_read_u16(self.program_counter);
                 let addr = base.wrapping_add(self.register_x as u16);
                 addr
             }
 
-            AddressingMode::Absolute_Y {
+            AddressingMode::Absolute_Y => {
                 let base = self.mem_read_u16(self.program_counter);
-                let addr = base.wrapping_add(self.register_x as u16);
+                // Correção: usando register_y aqui
+                let addr = base.wrapping_add(self.register_y as u16);
                 addr
             }
 
-            AddressingMode:: Indirect_X {
+            AddressingMode::Indirect_X => {
                 let base = self.mem_read(self.program_counter);
 
-                let ptr: u8 = (base as u8).wrapping_add(self.register_x);
+                let ptr: u8 = base.wrapping_add(self.register_x);
                 let lo = self.mem_read(ptr as u16);
                 let hi = self.mem_read(ptr.wrapping_add(1) as u16);
                 (hi as u16) << 8 | (lo as u16)
             }
 
-            AddressingMode:: Indirect_Y {
+            AddressingMode::Indirect_Y => {
                 let base = self.mem_read(self.program_counter);
 
                 let lo = self.mem_read(base as u16);
-                let hi = self.mem_read((base as u8).wrapping_add(1) as u16);;
+                let hi = self.mem_read(base.wrapping_add(1) as u16); // Removido o ;; duplicado
                 let deref_base = (hi as u16) << 8 | (lo as u16);
                 let deref = deref_base.wrapping_add(self.register_y as u16);
                 deref
+            }
+
+            AddressingMode::Relative => {
+                let offset = self.mem_read(self.program_counter) as i8;
+                
+                let base = self.program_counter.wrapping_add(1);
+                
+                if offset >= 0 {
+                    base.wrapping_add(offset as u16)
+                } else {
+                    base.wrapping_sub((-offset) as u16)
+                }
             }
 
             AddressingMode::NoneAddressing => {
