@@ -2,6 +2,7 @@ use crate::cpu::AddressingMode;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
+#[allow(dead_code)]
 pub struct OpCode {
     pub code: u8,
     pub mnemonic: &'static str,
@@ -13,13 +14,13 @@ pub struct OpCode {
 impl OpCode {
     fn new(code: u8, mnemonic: &'static str, len: u8, cycles: u8, mode: AddressingMode) -> Self {
         OpCode {
-            code: code,
-            mnemonic: mnemonic,
-            len: len,
-            cycles: cycles,
-            mode: mode,        
+            code,
+            mnemonic,
+            len,
+            cycles,
+            mode,
         }
-    }   
+    }
 }
 
 pub static CPU_OPS_CODES: LazyLock<Vec<OpCode>> = LazyLock::new(|| {
@@ -27,7 +28,7 @@ pub static CPU_OPS_CODES: LazyLock<Vec<OpCode>> = LazyLock::new(|| {
         OpCode::new(0x00, "BRK", 1, 7, AddressingMode::NoneAddressing),
         OpCode::new(0xea, "NOP", 1, 2, AddressingMode::NoneAddressing),
 
-        //Logical Instructions
+        /*Logical Instructions*/
 
         //AND
         OpCode::new(0x29, "AND", 2, 2, AddressingMode::Immediate),
@@ -59,7 +60,7 @@ pub static CPU_OPS_CODES: LazyLock<Vec<OpCode>> = LazyLock::new(|| {
         OpCode::new(0x41, "EOR", 2, 6, AddressingMode::Indirect_X),
         OpCode::new(0x51, "EOR", 2, 5, AddressingMode::Indirect_Y),
 
-        /*Aritimetic and Comparison Instructions*/
+        /*Arithmetic and Comparison Instructions*/
 
         //Add Memory to Accumulator with Carry (ADC)
         OpCode::new(0x69, "ADC", 2, 2, AddressingMode::Immediate),
@@ -200,7 +201,7 @@ pub static CPU_OPS_CODES: LazyLock<Vec<OpCode>> = LazyLock::new(|| {
         //Branch on Overflow Set (BVS)
         OpCode::new(0x70, "BVS", 2, 2, AddressingMode::Relative),
 
-        /* Stores, Loads Instructions */
+        /*Stores, Loads Instructions*/
 
         //Load Accumulator with Memory (LDA)
         OpCode::new(0xa9, "LDA", 2, 2, AddressingMode::Immediate),
@@ -235,16 +236,79 @@ pub static CPU_OPS_CODES: LazyLock<Vec<OpCode>> = LazyLock::new(|| {
         OpCode::new(0x81, "STA", 2, 6, AddressingMode::Indirect_X),
         OpCode::new(0x91, "STA", 2, 6, AddressingMode::Indirect_Y),
 
-
         //Store Index X in Memory (STX)
         OpCode::new(0x86, "STX", 2, 3, AddressingMode::ZeroPage),
         OpCode::new(0x96, "STX", 2, 4, AddressingMode::ZeroPage_Y),
         OpCode::new(0x8E, "STX", 3, 4, AddressingMode::Absolute),
 
-
         //Store Index Y in Memory (STY)
         OpCode::new(0x84, "STY", 2, 3, AddressingMode::ZeroPage),
         OpCode::new(0x94, "STY", 2, 4, AddressingMode::ZeroPage_X),
         OpCode::new(0x8C, "STY", 3, 4, AddressingMode::Absolute),
+
+        /*Register Transfers Instructions*/
+
+        //Transfer Accumulator to Index X (TAX)
+        OpCode::new(0xaa, "TAX", 1, 2, AddressingMode::NoneAddressing),
+
+        //Transfer Accumulator to Index Y (TAY)
+        OpCode::new(0xa8, "TAY", 1, 2, AddressingMode::NoneAddressing),
+
+        //Transfer Index X to Accumulator (TXA)
+        OpCode::new(0x8a, "TXA", 1, 2, AddressingMode::NoneAddressing),
+
+        //Transfer Index Y to Accumulator (TYA)
+        OpCode::new(0x98, "TYA", 1, 2, AddressingMode::NoneAddressing),
+
+        //Transfer Stack Pointer to Index X (TSX)
+        OpCode::new(0xba, "TSX", 1, 2, AddressingMode::NoneAddressing),
+
+        //Transfer Index X to Stack Pointer (TXS)
+        OpCode::new(0x9a, "TXS", 1, 2, AddressingMode::NoneAddressing),
+
+        /*Stack Instructions*/
+
+        //Push Accumulator on Stack (PHA)
+        OpCode::new(0x48, "PHA", 1, 3, AddressingMode::NoneAddressing),
+
+        //Pull Accumulator from Stack (PLA)
+        OpCode::new(0x68, "PLA", 1, 4, AddressingMode::NoneAddressing),
+
+        //Push Processor Status on Stack (PHP)
+        OpCode::new(0x08, "PHP", 1, 3, AddressingMode::NoneAddressing),
+
+        //Pull Processor Status from Stack (PLP)
+        OpCode::new(0x28, "PLP", 1, 4, AddressingMode::NoneAddressing),
+
+        /*Status Flag Changes Instructions*/
+
+        //Clear Carry Flag (CLC)
+        OpCode::new(0x18, "CLC", 1, 2, AddressingMode::NoneAddressing),
+
+        //Set Carry Flag (SEC)
+        OpCode::new(0x38, "SEC", 1, 2, AddressingMode::NoneAddressing),
+
+        //Clear Interrupt Disable Bit (CLI)
+        OpCode::new(0x58, "CLI", 1, 2, AddressingMode::NoneAddressing),
+
+        //Set Interrupt Disable Status (SEI)
+        OpCode::new(0x78, "SEI", 1, 2, AddressingMode::NoneAddressing),
+
+        //Clear Decimal Mode (CLD)
+        OpCode::new(0xd8, "CLD", 1, 2, AddressingMode::NoneAddressing),
+
+        //Set Decimal Mode (SED)
+        OpCode::new(0xf8, "SED", 1, 2, AddressingMode::NoneAddressing),
+
+        //Clear Overflow Flag (CLV)
+        OpCode::new(0xb8, "CLV", 1, 2, AddressingMode::NoneAddressing),
     ]
+});
+
+pub static OPCODES_MAP: LazyLock<HashMap<u8, &'static OpCode>> = LazyLock::new(|| {
+    let mut map = HashMap::new();
+    for cpuop in &*CPU_OPS_CODES {
+        map.insert(cpuop.code, cpuop);
+    }
+    map
 });
